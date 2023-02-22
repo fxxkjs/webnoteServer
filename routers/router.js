@@ -26,6 +26,8 @@ router.post('/register', function (req, res) {
                     fs.readFile(`${userPath}/${req.body.username}/info/userinfo.json`, 'utf-8',
                         (err, data) => {
                             if (err) {
+                                console.log(err);
+                                console.log(`${userPath}/${req.body.username}/info/userInfo.json`);
                                 res.send({ code: 0, msg: "系统繁忙，请稍后重试。" })
                             } else {
                                 let userinfo = JSON.parse(data)
