@@ -23,7 +23,7 @@ router.post('/register', function (req, res) {
             // 为用户创建个人目录
             fs.mkdir(`${userPath}/${req.body.username}`, (err) => {
                 if (err) {
-                    fs.readFile(`${userPath}/${req.body.username}/info/userinfo.json`, 'utf-8',
+                    fs.readFile(`${userPath}/${req.body.username}/info/userInfo.json`, 'utf-8',
                         (err, data) => {
                             if (err) {
                                 console.log(err);
