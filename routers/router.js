@@ -154,7 +154,6 @@ router.post('/delFolder', function (req, res) {
 
 // 上传md
 router.post("/upMd", function (req, res) {
-    console.log("/upMd");
     let upload = multer({
         storage: multer.diskStorage({ // 存储引擎
             destination: function (req, file, cb) { // 配置文件存储目录
@@ -199,6 +198,51 @@ router.post("/upMdData", function (req, res) {
         )
         : res.send({ code: 0, msg: "欢迎页内容无法保存。" })
 })
+
+// 新建空白md
+router.post('/addMd', function (req, res) {
+    if (!req.signedCookies.webnote) {
+        res.send({ code: 0, msg: `非法操作` })
+    }
+    let path = `${userPath}/${req.signedCookies.webnote}/md/${req.body.topNavType}/${req.body.leftNavType}/${req.body.mdName}.md`
+    fs.access(path, fs.constants.F_OK, (err) => {
+        if (err) {
+            fs.writeFile(path, "", (err) => {
+                if (err) {
+                    res.send({ code: 0, msg: `${req.body.mdName} 创建失败，请稍后重试` })
+                } else {
+                    res.send({ code: 1, msg: `${req.body.mdName} 创建成功` })
+                }
+            })
+        } else {
+            res.send({ code: 0, msg: `${req.body.mdName} 已存在，请更换文件名。` })
+        }
+    })
+
+});
+
+// md重命名
+router.post('/setMdName', function (req, res) {
+    if (!req.signedCookies.webnote) {
+        res.send({ code: 0, msg: `非法操作` })
+    }
+    let path = `${userPath}/${req.signedCookies.webnote}/md/${req.body.topNavType}/${req.body.leftNavType}`
+    fs.access(`${path}/${req.body.mdName}.md`, fs.constants.F_OK, (err) => {
+        if (err) {
+            res.send({ code: 0, msg: `非法操作` })
+        } else {
+            fs.rename(`${path}/${req.body.mdName}.md`, `${path}/${req.body.newMdName}.md`, (err) => {
+                if (err) {
+                    res.send({ code: 0, msg: `${req.body.mdName} 重命名失败，请稍后重试` })
+                } else {
+                    res.send({ code: 1, msg: `${req.body.mdName} 已重命名为 ${req.body.newMdName} ` })
+                }
+            })
+
+        }
+    })
+
+});
 
 // 上传md图片
 router.post('/upImg', function (req, res) {
