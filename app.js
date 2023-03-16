@@ -9,8 +9,8 @@ const expressip = require('express-ip');        // userIP
 
 // 基于express创建服务器
 const app = express();
-app.use(cookieParser("key775"))
-app.use(session({ secret: "key775", resave: false, saveUninitialized: false, cookie: { secure: false }, name: "tooken" }));
+app.use(cookieParser())
+app.use(session({ secret: "", resave: false, saveUninitialized: false, cookie: { secure: false }, name: "tooken" }));
 app.use(compression())
 app.use(bodyParser.urlencoded({ extended: false }));
 app.use(bodyParser.json())

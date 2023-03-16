@@ -6,6 +6,8 @@ const fs = require("fs")
 const multer = require('multer')
 const path = require('path')
 const mail = require("../tools/mail")
+const AES = require("../tools/AES");
+
 
 const mdPath = "./mdRoot/md"
 const userPath = "./mdUser"
@@ -19,7 +21,8 @@ const mailReg = /^\w+([-+.]\w+)*@\w+([-.]\w+)*\.\w+([-.]\w+)*$/;
 router.post('/register', function (req, res) {
     // 验证格式
     if (mailReg.test(req.body.username) && req.body.password.length >= 6 && req.body.password.length <= 16) {
-        if (req.body.code === req.signedCookies.wn) {
+
+        if (req.body.code === AES.get(req.cookies.wn)) {
             // 为用户创建个人目录
             fs.mkdir(`${userPath}/${req.body.username}`, (err) => {
                 if (err) {
@@ -70,7 +73,7 @@ router.post('/register', function (req, res) {
                 }
             });
         } else {
-            req.signedCookies.wn === undefined ? res.send({ code: 0, msg: "验证码已过期。" }) : res.send({ code: 0, msg: "验证码错误。" })
+            AES.get(req.cookies.wn) === undefined ? res.send({ code: 0, msg: "验证码已过期。" }) : res.send({ code: 0, msg: "验证码错误。" })
         }
     } else {
         res.send({ code: 0, msg: "账号或密码格式不符合要求。" })
@@ -80,7 +83,7 @@ router.post('/register', function (req, res) {
 // 获取顶部目录
 router.get('/topNav', (req, res) => {
     fs.readdir(
-        req.signedCookies && req.signedCookies.webnote && fs.statSync(`${userPath}/${req.signedCookies.webnote}/md`, { throwIfNoEntry: false }) ? `${userPath}/${req.signedCookies.webnote}/md` : mdPath,
+        req.cookies && AES.get(req.cookies.webnote) && fs.statSync(`${userPath}/${AES.get(req.cookies.webnote)}/md`, { throwIfNoEntry: false }) ? `${userPath}/${AES.get(req.cookies.webnote)}/md` : mdPath,
         (err, files) => {
             err ? res.send({ code: 0, data: ["请刷新重试。", "意料之外的错误，"] }) : res.send({ code: 1, data: files })
         }
@@ -90,7 +93,7 @@ router.get('/topNav', (req, res) => {
 // 获取导航栏目录
 router.get('/leftNav', (req, res) => {
     fs.readdir(
-        tmpPath = `${req.signedCookies && req.signedCookies.webnote ? `${userPath}/${req.signedCookies.webnote}/md` : mdPath}/${req.query.topnav}`,
+        tmpPath = `${req.cookies && AES.get(req.cookies.webnote) ? `${userPath}/${AES.get(req.cookies.webnote)}/md` : mdPath}/${req.query.topnav}`,
         (err, data) => {
             if (err || !fs.statSync(tmpPath, { throwIfNoEntry: false })) {
                 res.send({ code: 0, data: [{ title: "404", value: ["意料之外的错误，", "请刷新重试。"] }] })
@@ -113,13 +116,13 @@ router.get('/leftNav', (req, res) => {
 
 // 参数路由获取文档内容
 router.get('/cont/:topnav/:leftnav/:title', function (req, res) {
-    fs.readFile(`${req.signedCookies && req.signedCookies.webnote ? `${userPath}/${req.signedCookies.webnote}/md` : mdPath}/${req.params.topnav}/${req.params.leftnav}/${req.params.title}.md`,
+    fs.readFile(`${req.cookies && AES.get(req.cookies.webnote) ? `${userPath}/${AES.get(req.cookies.webnote)}/md` : mdPath}/${req.params.topnav}/${req.params.leftnav}/${req.params.title}.md`,
         'utf-8',
         (err, data) => { err ? res.send({ code: 1, data: `> 非法请求！` }) : res.send({ code: 1, data: `${data}` }) }
     );
     // 记录访问者IP地址
     fs.writeFile(
-        `${req.signedCookies && req.signedCookies.webnote ? `${userPath}/${req.signedCookies.webnote}/info/log.txt` : `./mdRoot/log/log.txt`}`,
+        `${req.cookies && AES.get(req.cookies.webnote) ? `${userPath}/${AES.get(req.cookies.webnote)}/info/log.txt` : `./mdRoot/log/log.txt`}`,
         `time: ${new Date().toLocaleString()},   IP: ${req.ipInfo.ip},   item: ${req.params.topnav}/${req.params.leftnav}/${req.params.title}; \n`,
         { flag: "a" },
         (err) => { }
@@ -128,22 +131,22 @@ router.get('/cont/:topnav/:leftnav/:title', function (req, res) {
 
 // 添加分类
 router.post('/addFolder', function (req, res) {
-    !req.signedCookies.webnote && !fs.statSync(`${userPath}/${req.signedCookies.webnote}`, { throwIfNoEntry: false })
+    !AES.get(req.cookies.webnote) && !fs.statSync(`${userPath}/${AES.get(req.cookies.webnote)}`, { throwIfNoEntry: false })
         ? res.send({ code: 0, msg: "非法操作！" }) :
         !navReg.test(req.body.topNav) && !navReg.test(req.body.leftNav) ? res.send({ code: 0, msg: "请检查格式。" })
             : fs.mkdir(
-                req.body.leftNav ? `${userPath}/${req.signedCookies.webnote}/md/${req.body.topNav}/${req.body.leftNav}` : `${userPath}/${req.signedCookies.webnote}/md/${req.body.topNav}`,
+                req.body.leftNav ? `${userPath}/${AES.get(req.cookies.webnote)}/md/${req.body.topNav}/${req.body.leftNav}` : `${userPath}/${AES.get(req.cookies.webnote)}/md/${req.body.topNav}`,
                 (err) => { err ? res.send({ code: 0, msg: "该分类已存在。" }) : res.send({ code: 1, msg: "添加成功。" }) }
             )
 })
 
 // 删除分类
 router.post('/delFolder', function (req, res) {
-    if (req.signedCookies && req.signedCookies.webnote && fs.statSync(`${userPath}/${req.signedCookies.webnote}`, { throwIfNoEntry: false })) {
+    if (req.cookies && AES.get(req.cookies.webnote) && fs.statSync(`${userPath}/${AES.get(req.cookies.webnote)}`, { throwIfNoEntry: false })) {
         fs.rm(
-            !req.body.leftNav && !req.body.items ? `${userPath}/${req.signedCookies.webnote}/md/${req.body.topNav}`
-                : req.body.leftNav && !req.body.items ? `${userPath}/${req.signedCookies.webnote}/md/${req.body.topNav}/${req.body.leftNav}`
-                    : `${userPath}/${req.signedCookies.webnote}/md/${req.body.topNav}/${req.body.leftNav}/${req.body.items}.md`,
+            !req.body.leftNav && !req.body.items ? `${userPath}/${AES.get(req.cookies.webnote)}/md/${req.body.topNav}`
+                : req.body.leftNav && !req.body.items ? `${userPath}/${AES.get(req.cookies.webnote)}/md/${req.body.topNav}/${req.body.leftNav}`
+                    : `${userPath}/${AES.get(req.cookies.webnote)}/md/${req.body.topNav}/${req.body.leftNav}/${req.body.items}.md`,
             { recursive: true },
             (err) => { err ? res.send({ code: 0, msg: "意料之外的错误，请刷新页面重试。" }) : res.send({ code: 1, msg: "删除成功" }) }
         )
@@ -157,8 +160,8 @@ router.post("/upMd", function (req, res) {
     let upload = multer({
         storage: multer.diskStorage({ // 存储引擎
             destination: function (req, file, cb) { // 配置文件存储目录
-                let tmpPath = `${userPath}/${req.signedCookies.webnote}/md/${req.body.topNavType}/${req.body.leftNavType}`
-                cpType(req, tmpPath) && req.signedCookies.webnote && req.body.topNavType && req.body.leftNavType
+                let tmpPath = `${userPath}/${AES.get(req.cookies.webnote)}/md/${req.body.topNavType}/${req.body.leftNavType}`
+                cpType(req, tmpPath) && AES.get(req.cookies.webnote) && req.body.topNavType && req.body.leftNavType
                     ? cb(null, tmpPath) : cb(`${file.originalname}上传失败，参数缺失！`)
             },
             filename: function (req, file, cb) { // 配置文件名
@@ -190,9 +193,9 @@ router.post("/upMd", function (req, res) {
 
 // 更新md
 router.post("/upMdData", function (req, res) {
-    req.body.topNavType && req.body.leftNavType && req.body.ItemType && req.signedCookies.webnote && fs.statSync(`${userPath}/${req.signedCookies.webnote}`, { throwIfNoEntry: false })
+    req.body.topNavType && req.body.leftNavType && req.body.ItemType && AES.get(req.cookies.webnote) && fs.statSync(`${userPath}/${AES.get(req.cookies.webnote)}`, { throwIfNoEntry: false })
         ? fs.writeFile(
-            `${userPath}/${req.signedCookies.webnote}/md/${req.body.topNavType}/${req.body.leftNavType}/${req.body.ItemType}.md`,
+            `${userPath}/${AES.get(req.cookies.webnote)}/md/${req.body.topNavType}/${req.body.leftNavType}/${req.body.ItemType}.md`,
             req.body.content,
             (err) => { err ? res.send({ code: 0, msg: "保存失败，请重试。" }) : res.send({ code: 1, msg: "保存成功。" }) }
         )
@@ -201,10 +204,10 @@ router.post("/upMdData", function (req, res) {
 
 // 新建空白md
 router.post('/addMd', function (req, res) {
-    if (!req.signedCookies.webnote) {
+    if (!AES.get(req.cookies.webnote)) {
         res.send({ code: 0, msg: `非法操作` })
     }
-    let path = `${userPath}/${req.signedCookies.webnote}/md/${req.body.topNavType}/${req.body.leftNavType}/${req.body.mdName}.md`
+    let path = `${userPath}/${AES.get(req.cookies.webnote)}/md/${req.body.topNavType}/${req.body.leftNavType}/${req.body.mdName}.md`
     fs.access(path, fs.constants.F_OK, (err) => {
         if (err) {
             fs.writeFile(path, "", (err) => {
@@ -223,10 +226,10 @@ router.post('/addMd', function (req, res) {
 
 // md重命名
 router.post('/setMdName', function (req, res) {
-    if (!req.signedCookies.webnote) {
+    if (!AES.get(req.cookies.webnote)) {
         res.send({ code: 0, msg: `非法操作` })
     }
-    let path = `${userPath}/${req.signedCookies.webnote}/md/${req.body.topNavType}/${req.body.leftNavType}`
+    let path = `${userPath}/${AES.get(req.cookies.webnote)}/md/${req.body.topNavType}/${req.body.leftNavType}`
     fs.access(`${path}/${req.body.mdName}.md`, fs.constants.F_OK, (err) => {
         if (err) {
             res.send({ code: 0, msg: `非法操作` })
@@ -249,7 +252,7 @@ router.post('/upImg', function (req, res) {
     let upload = multer({
         storage: multer.diskStorage({ // 存储引擎
             destination: function (req, file, cb) { // 配置文件存储目录
-                let tmpPath = `${userPath}/${req.signedCookies.webnote}/img/`
+                let tmpPath = `${userPath}/${AES.get(req.cookies.webnote)}/img/`
                 cpType(req, tmpPath) ? cb(null, tmpPath) : cb("非法请求！")
             },
             filename: function (req, file, cb) { // 配置文件名
@@ -281,8 +284,8 @@ router.post('/upImg', function (req, res) {
 
 // 删除md图片
 router.post('/delImg', function (req, res) {
-    if (req.signedCookies.webnote && req.body.imgName) {
-        let path = `${userPath}/${req.signedCookies.webnote}/img/${req.body.imgName}`
+    if (AES.get(req.cookies.webnote) && req.body.imgName) {
+        let path = `${userPath}/${AES.get(req.cookies.webnote)}/img/${req.body.imgName}`
         fs.access(path, fs.constants.F_OK, (err) => {
             if (err) {
                 res.send({ code: 0, msg: `${req.body.imgName} 不存在。` })
@@ -298,7 +301,7 @@ router.post('/delImg', function (req, res) {
 
 // 获取图片
 router.get("/getimg/:imgname", function (req, res) {
-    if (!req.signedCookies.webnote) {
+    if (!AES.get(req.cookies.webnote)) {
         if (req.session.webnote === req.ipInfo.ip) {
             fs.access(`${mdPath}/../img/${req.params.imgname}`, fs.constants.F_OK, (err) => {
                 if (!err) {
@@ -312,7 +315,7 @@ router.get("/getimg/:imgname", function (req, res) {
         }
 
     } else {
-        let imgPath = `${userPath}/${req.signedCookies.webnote}/img/${req.params.imgname}`
+        let imgPath = `${userPath}/${AES.get(req.cookies.webnote)}/img/${req.params.imgname}`
         fs.access(imgPath, fs.constants.F_OK, (err) => {
             if (!err) {
                 fs.createReadStream(imgPath).pipe(res)
@@ -325,11 +328,11 @@ router.get("/getimg/:imgname", function (req, res) {
 
 // 查询图片是否存在
 router.post('/queryImg', function (req, res) {
-    if (cpType(req, `${userPath}/${req.signedCookies.webnote}`)) {
+    if (cpType(req, `${userPath}/${AES.get(req.cookies.webnote)}`)) {
         if (req.body.imgNameArr instanceof Array) {
             let imgArr = []
             req.body.imgNameArr.forEach((item) => {
-                if (!fs.statSync(`${userPath}/${req.signedCookies.webnote}/img/${item}`, { throwIfNoEntry: false })) {
+                if (!fs.statSync(`${userPath}/${AES.get(req.cookies.webnote)}/img/${item}`, { throwIfNoEntry: false })) {
                     imgArr.push(item)
                 }
             })
@@ -363,10 +366,11 @@ router.post('/getCode', (req, res) => {
  * @param {Number} time 过期时间（分钟）
  */
 function setCookie(res, cookieName, cookinfo, time) {
-    res.cookie(cookieName, cookinfo, {
+    res.cookie(cookieName, AES.set(cookinfo), {
         maxAge: 60000 * time,   //过期时间，单位毫秒
         httpOnly: true,         //只能服务器改变cookie
-        signed: true,           //使用签名模式
+        // signed: true,           //使用签名模式
+        // secret: "R0u%2Bzj8A"
         // secure : true,          //只有https才可以用
         // domain: 'webnote.fun',  //域名
         // path: '/'               //路径
@@ -381,7 +385,7 @@ router.get('/session', (req, res) => {
 
 // cookieType
 router.post('/cookieType', function (req, res) {
-    req.signedCookies && req.signedCookies.webnote ? res.send({ code: 1, msg: "已登录。" }) : res.send({ code: 0, msg: "网络异常,请重试。" })
+    req.cookies && AES.get(req.cookies.webnote) ? res.send({ code: 1, msg: "已登录。" }) : res.send({ code: 0, msg: "网络异常,请重试。" })
 })
 
 //  摧毁 session 回调函数设置跳转域名
@@ -398,7 +402,7 @@ router.get('/unSession', (req, res) => {
  * @returns {Boolean} true存在，false其中一项不存在。
  */
 function cpType(req, paths) {
-    return !!req.signedCookies.webnote && !!fs.statSync(paths, { throwIfNoEntry: false })
+    return !!AES.get(req.cookies.webnote) && !!fs.statSync(paths, { throwIfNoEntry: false })
 }
 
 //  router全局配置

@@ -6,8 +6,8 @@ const transporter = nodemailer.createTransport({
     port: 465,              // 邮件服务器端口
     secure: true,           // 邮件服务器SSL端口为true，否则false
     auth: {
-        user: 'webnotefun@163.com',     // 邮箱账号
-        pass: 'WQBPFCQDCPINVJZS',       // 邮箱SMTP授权码
+        user: '@163.com',     // 邮箱账号
+        pass: '',       // 邮箱SMTP授权码
     },
 });
 
