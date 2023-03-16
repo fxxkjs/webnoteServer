@@ -350,12 +350,12 @@ router.post('/queryImg', function (req, res) {
 router.post('/getCode', (req, res) => {
     let code = Math.random().toFixed(6).slice(-6)
     setCookie(res, "wn", code, 10)
-    // mail.sendCode(req.body.username, code, (err, info) => {
-    //     err ? res.send({ code: 0, msg: "邮件发送失败！" }) : res.send({ code: 1, msg: "邮件发送成功" });
-    // })
+    mail.sendCode(req.body.username, code, (err, info) => {
+        err ? res.send({ code: 0, msg: "邮件发送失败！" }) : res.send({ code: 1, msg: "邮件发送成功" });
+    })
 
-    console.log(code);
-    res.send({ code: 1, msg: "邮件发送成功" });
+    // console.log("Code " + code);
+    // res.send({ code: 1, msg: "邮件发送成功" });
 })
 
 /** 设置cookie
@@ -370,7 +370,6 @@ function setCookie(res, cookieName, cookinfo, time) {
         maxAge: 60000 * time,   //过期时间，单位毫秒
         httpOnly: true,         //只能服务器改变cookie
         // signed: true,           //使用签名模式
-        // secret: "R0u%2Bzj8A"
         // secure : true,          //只有https才可以用
         // domain: 'webnote.fun',  //域名
         // path: '/'               //路径

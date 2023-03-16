@@ -1,13 +1,13 @@
 const nodemailer = require('nodemailer')
-
+const config = require("../config")
 // 邮件配置，默认使用SMTP
 const transporter = nodemailer.createTransport({
-    host: "smtp.163.com",   // 邮件服务器地址
-    port: 465,              // 邮件服务器端口
+    host: config.mail.host, // 邮件服务器地址
+    port: config.mail.port, // 邮件服务器端口
     secure: true,           // 邮件服务器SSL端口为true，否则false
     auth: {
-        user: '@163.com',     // 邮箱账号
-        pass: '',       // 邮箱SMTP授权码
+        user: config.mail.user, // 邮箱账号
+        pass: config.mail.pass, // 邮箱SMTP授权码
     },
 });
 
@@ -21,7 +21,7 @@ const transporter = nodemailer.createTransport({
 function sendCode(userMail, numCode, callback) {
     //  邮件内容
     let mailInfo = {
-        from: '"webnote" <webnotefun@163.com>',
+        from: config.mail.from,
         to: userMail,
         subject: "Code",
         text: `你的一次性代码为: ${numCode}
