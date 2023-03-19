@@ -2,11 +2,14 @@
 node_modules
 /dist
 /config.js
+/mdUser/*
+
 # local env files
 .env.local
 .env.*.local
 
 # Log files
+
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
@@ -19,3 +22,4 @@ yarn-error.log*
 *.njsproj
 *.sln
 *.sw?
+*.txt

@@ -6,14 +6,12 @@ function set(value) {
 }
 
 function get(value) {
-    if (!value) {
-        return false
-    }
+    if (!value) { return false }
     return CryptoJS.AES.decrypt(value, config.AESKey).toString(CryptoJS.enc.Utf8);
 }
 
-const AES = {
+
+module.exports = AES = {
     set,
     get
 }
-module.exports = AES 

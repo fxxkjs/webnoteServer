@@ -353,9 +353,7 @@ router.post('/getCode', (req, res) => {
     mail.sendCode(req.body.username, code, (err, info) => {
         err ? res.send({ code: 0, msg: "邮件发送失败！" }) : res.send({ code: 1, msg: "邮件发送成功" });
     })
-
-    // console.log("Code " + code);
-    // res.send({ code: 1, msg: "邮件发送成功" });
+    console.log("Code " + code);
 })
 
 /** 设置cookie
