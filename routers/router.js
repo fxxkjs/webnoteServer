@@ -29,20 +29,20 @@ router.post('/register', function (req, res) {
                     fs.readFile(`${userPath}/${req.body.username}/info/userInfo.json`, 'utf-8',
                         (err, data) => {
                             if (err) {
-                                console.log(err);
-                                console.log(`${userPath}/${req.body.username}/info/userInfo.json`);
                                 res.send({ code: 0, msg: "系统繁忙，请稍后重试。" })
                             } else {
                                 let userinfo = JSON.parse(data)
                                 if (req.body.username === userinfo.id && req.body.password === userinfo.psw) {
                                     setCookie(res, "webnote", req.body.username, 60 * 24)
                                     res.send({ code: 1, msg: "登录成功。" })
+
                                     let data = JSON.stringify({ time: new Date().toLocaleString(), ip: req.ipInfo, msg: true })
-                                    fs.writeFile(`${userPath}/${req.body.username}/info/signInLog.json`, `${data};\n`, { flag: "a" }, (err) => { })
+                                    fs.writeFile(`${userPath}/${req.body.username}/info/signInLog.txt`, `${data}\n`, { flag: "a" }, (err) => { })
+
                                 } else {
                                     res.send({ code: 0, msg: "用户名或密码错误。" })
                                     let data = JSON.stringify({ time: new Date().toLocaleString(), ip: req.ipInfo, msg: false })
-                                    fs.writeFile(`${userPath}/${req.body.username}/info/signInLog.ison`, `${data}:\n`, { flag: "a" }, (err) => { })
+                                    fs.writeFile(`${userPath}/${req.body.username}/info/signInLog.txt`, `${data}\n`, { flag: "a" }, (err) => { })
                                 }
                             }
                         }
@@ -58,7 +58,9 @@ router.post('/register', function (req, res) {
                             fs.mkdir(`${userPath}/${req.body.username}/img`, (err) => { if (err) { errNum++ } })
                             fs.mkdir(`${userPath}/${req.body.username}/info`, (err) => { if (err) { errNum++ } })
                             let config = JSON.stringify({ time: new Date().toLocaleString(), id: req.body.username, psw: req.body.password, ip: req.ipInfo })
-                            fs.writeFile(`${userPath}/${req.body.username}/info/userInfo.json`, `${config}\n`, { flag: "a" }, (err) => { if (err) { errNum++ } })
+                            fs.writeFile(`${userPath}/${req.body.username}/info/userInfo.json`, `${config}`, { flag: "a" }, (err) => { if (err) { errNum++ } })
+                            fs.writeFile(`${userPath}/${req.body.username}/info/signInLog.txt`, ``, { flag: "a" }, (err) => { if (err) { errNum++ } })
+                            fs.writeFile(`${userPath}/${req.body.username}/info/log.txt`, ``, { flag: "a" }, (err) => { if (err) { errNum++ } })
                             if (errNum === null) {
                                 setCookie(res, "webnote", req.body.username, 60 * 24)
                                 res.send({ code: 1, msg: "注册成功。" })
@@ -121,9 +123,14 @@ router.get('/cont/:topnav/:leftnav/:title', function (req, res) {
         (err, data) => { err ? res.send({ code: 1, data: `> 非法请求！` }) : res.send({ code: 1, data: `${data}` }) }
     );
     // 记录访问者IP地址
+    let data = JSON.stringify({
+        time: new Date().toLocaleString(),
+        IP: req.ipInfo.ip,
+        path: `${req.params.topnav}/${req.params.leftnav}/${req.params.title}`
+    })
     fs.writeFile(
         `${req.cookies && AES.get(req.cookies.webnote) ? `${userPath}/${AES.get(req.cookies.webnote)}/info/log.txt` : `./mdRoot/log/log.txt`}`,
-        `time: ${new Date().toLocaleString()},   IP: ${req.ipInfo.ip},   item: ${req.params.topnav}/${req.params.leftnav}/${req.params.title}; \n`,
+        `${data} \n`,
         { flag: "a" },
         (err) => { }
     )
@@ -350,10 +357,11 @@ router.post('/queryImg', function (req, res) {
 router.post('/getCode', (req, res) => {
     let code = Math.random().toFixed(6).slice(-6)
     setCookie(res, "wn", code, 10)
-    mail.sendCode(req.body.username, code, (err, info) => {
-        err ? res.send({ code: 0, msg: "邮件发送失败！" }) : res.send({ code: 1, msg: "邮件发送成功" });
-    })
+    // mail.sendCode(req.body.username, code, (err, info) => {
+    //     err ? res.send({ code: 0, msg: "邮件发送失败！" }) : res.send({ code: 1, msg: "邮件发送成功" });
+    // })
     console.log("Code " + code);
+    res.send({ code: 1, msg: "邮件发送成功" });
 })
 
 /** 设置cookie
