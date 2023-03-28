@@ -3,7 +3,7 @@ node_modules
 /dist
 /config.js
 /mdUser/*
-
+/admin
 # local env files
 .env.local
 .env.*.local

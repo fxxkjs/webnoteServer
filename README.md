@@ -11,6 +11,7 @@ module.exports = {
   },
   AESKey: "", // AES加密字符串
   sessionKey: "", // session加密字符串
+  origin: [""] // 允许跨域域名列表
 };
 ```
 
