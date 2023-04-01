@@ -558,7 +558,7 @@ router.post("/getCode", (req, res) => {
   mail.sendCode(req.body.username, code, (err, info) => {
       err ? res.send({ code: 0, msg: "邮件发送失败！" }) : res.send({ code: 1, msg: "邮件发送成功" });
   })
-  // console.log("Code " + code);
+  console.log("Code: " + code);
   // res.send({ code: 1, msg: "邮件发送成功" });
 });
 
@@ -571,11 +571,11 @@ router.post("/getCode", (req, res) => {
  */
 function setCookie(res, cookieName, cookinfo, time = 0) {
   res.cookie(cookieName, AES.set(cookinfo), {
+    domain: '.webnote.fun',  //域名
     maxAge: 60000 * time, //过期时间，单位毫秒
     httpOnly: true, //只能服务器改变cookie
     // signed: true,           //使用签名模式
     // secure : true,          //只有https才可以用
-    // domain: 'webnote.fun',  //域名
     // path: '/'               //路径
   });
 }

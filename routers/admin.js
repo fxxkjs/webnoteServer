@@ -7,6 +7,7 @@ const userPath = path.join(__dirname, "../mdUser");
 const rootPath = path.join(__dirname, "../mdRoot");
 const tools = require("../tools/tools");
 
+
 // 获取用户列表
 router.get("/getUserList", (req, res) => {
   if (isUser(req.cookies.webnote)) {
@@ -22,6 +23,7 @@ router.get("/getUserList", (req, res) => {
         IP: sliceIp(userData.ip.ip),
       });
     }
+    writeLog(req,`获取用户列表`)
     res.send({ code: 1, data: userInfo });
   } else {
     res.send({ code: 0, msg: "非法请求" });
@@ -50,6 +52,7 @@ router.post("/getUserLog", (req, res) => {
           title: isroot ? data.path : "******" + data.path.slice(-2, data.path.lenth)
         });
       });
+      writeLog(req,`查看${req.body.userKey}浏览记录`)
       res.send({ code: 1, data: arr });
     });
   } else {
@@ -76,6 +79,7 @@ router.post("/getUserSignInLog", (req, res) => {
             title: data.msg ? "成功" : "失败",
           });
         });
+        writeLog(req,`查看${req.body.userKey}登录记录`)
         res.send({ code: 1, data: arr });
       }
     });
@@ -105,6 +109,7 @@ router.post("/getUserImgList", (req, res) => {
             size: `${~~(fs.statSync(`${path}/${data[index]}`).size / 1024)} KB`,
           });
         });
+        writeLog(req,`查看${req.body.userKey}图片列表`)
         res.send({ code: 1, data: arr });
       }
     });
@@ -116,6 +121,7 @@ router.post("/getUserImgList", (req, res) => {
 // 获取adminNav
 router.get("/getAdminNav", async (req, res) => {
   if (isUser(req.cookies.webnote)) {
+    writeLog(req,`获取主站导航树`)
     res.send({ code: 1, data: await tools.DirTree(`${rootPath}/md`) });
   } else {
     res.send({ code: 0, msg: "非法请求" });
@@ -126,9 +132,12 @@ router.get("/getAdminNav", async (req, res) => {
 router.post("/getMdData", function (req, res) {
   if (isUser(req.cookies.webnote)) {
     fs.readFile(`${rootPath}/md/${req.body.path}`, "utf-8", (err, data) => {
-      err
-        ? res.send({ code: 1, data: `> 非法请求！` })
-        : res.send({ code: 1, data: data });
+      if(err){
+        res.send({ code: 1, data: `> 服务器繁忙，请刷新或稍后重试！` })
+      }else{
+        res.send({ code: 1, data: data });
+        writeLog(req,`查看${req.body.path}`)
+      }
     });
   } else {
     res.send({ code: 0, msg: "非法请求" });
@@ -142,7 +151,9 @@ router.post("/getAdminImg", function (req, res) {
   let username = AES.get(req.cookies.webnote);
 
   if (isUser(req.cookies.webnote) && imgname) {
+    
     if (username === userkey) {
+      writeLog(req,`查看${imgname}图片`)
       res.send({
         code: 1,
         data: `data:image/${imgname.split(".").pop()};base64,${fs.readFileSync(
@@ -151,6 +162,7 @@ router.post("/getAdminImg", function (req, res) {
         )}`,
       });
     } else if (req.body.userKey === undefined) {
+      writeLog(req,`查看主站${imgname}图片`)
       res.send({
         code: 1,
         data: `data:image/${imgname.split(".").pop()};base64,${fs.readFileSync(
@@ -177,6 +189,21 @@ function sliceIp(str) {
 }
 function slice2(str) {
   return str.slice(0, 2) + "**********";
+}
+// 日志模板
+function writeLog(req,path){
+  let data = JSON.stringify({
+    time: new Date().toLocaleString(),
+    IP: req.ipInfo.ip,
+    path: path,
+  });
+
+  fs.writeFile(
+    `${userPath}/${AES.get(req.cookies.webnote)}/info/log.txt`,
+    `${data} \n`,
+    { flag: "a" },
+    (err) => {}
+  );
 }
 
 module.exports = router;
