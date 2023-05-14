@@ -38,10 +38,3 @@ app.use(express.static("./dist"))
 // console.log(process.env.NODE_ENV);
 // 启动，监听指定端口
 app.listen(65535);
-
-// admin
-const admin = express()
-
-admin.use(express.static("./admin"))
-
-admin.listen(65533)

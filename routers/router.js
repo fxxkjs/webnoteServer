@@ -51,7 +51,7 @@ router.post("/register", function (req, res) {
                     `${userPath}/${req.body.username}/info/signInLog.txt`,
                     `${data}\n`,
                     { flag: "a" },
-                    (err) => {}
+                    (err) => { }
                   );
                 } else {
                   res.send({ code: 0, msg: "用户名或密码错误。" });
@@ -64,7 +64,7 @@ router.post("/register", function (req, res) {
                     `${userPath}/${req.body.username}/info/signInLog.txt`,
                     `${data}\n`,
                     { flag: "a" },
-                    (err) => {}
+                    (err) => { }
                   );
                 }
               }
@@ -134,7 +134,7 @@ router.post("/register", function (req, res) {
                   fs.rm(
                     `${userPath}/${req.body.username}`,
                     { recursive: true, maxRetries: 10 },
-                    function (err) {}
+                    function (err) { }
                   );
                   res.send({ code: 0, msg: "服务器繁忙，请稍后重试。" });
                 }
@@ -174,11 +174,10 @@ router.get("/topNav", (req, res) => {
 // 获取导航栏目录
 router.get("/leftNav", (req, res) => {
   fs.readdir(
-    (tmpPath = `${
-      req.cookies && AES.get(req.cookies.webnote)
-        ? `${userPath}/${AES.get(req.cookies.webnote)}/md`
-        : mdPath
-    }/${req.query.topnav}`),
+    (tmpPath = `${req.cookies && AES.get(req.cookies.webnote)
+      ? `${userPath}/${AES.get(req.cookies.webnote)}/md`
+      : mdPath
+      }/${req.query.topnav}`),
     (err, data) => {
       if (err || !fs.statSync(tmpPath, { throwIfNoEntry: false })) {
         res.send({
@@ -208,10 +207,9 @@ router.get("/leftNav", (req, res) => {
 // 参数路由获取文档内容
 router.get("/cont/:topnav/:leftnav/:title", function (req, res) {
   fs.readFile(
-    `${
-      req.cookies && AES.get(req.cookies.webnote)
-        ? `${userPath}/${AES.get(req.cookies.webnote)}/md`
-        : mdPath
+    `${req.cookies && AES.get(req.cookies.webnote)
+      ? `${userPath}/${AES.get(req.cookies.webnote)}/md`
+      : mdPath
     }/${req.params.topnav}/${req.params.leftnav}/${req.params.title}.md`,
     "utf-8",
     (err, data) => {
@@ -227,31 +225,29 @@ router.get("/cont/:topnav/:leftnav/:title", function (req, res) {
     path: `${req.params.topnav}/${req.params.leftnav}/${req.params.title}`,
   });
   fs.writeFile(
-    `${
-      req.cookies && AES.get(req.cookies.webnote)
-        ? `${userPath}/${AES.get(req.cookies.webnote)}/info/log.txt`
-        : `./mdRoot/log/log.txt`
+    `${req.cookies && AES.get(req.cookies.webnote)
+      ? `${userPath}/${AES.get(req.cookies.webnote)}/info/log.txt`
+      : `./mdRoot/log/log.txt`
     }`,
     `${data} \n`,
     { flag: "a" },
-    (err) => {}
+    (err) => { }
   );
 });
 
 // 添加分类
 router.post("/addFolder", function (req, res) {
   !AES.get(req.cookies.webnote) &&
-  !fs.statSync(`${userPath}/${AES.get(req.cookies.webnote)}`, {
-    throwIfNoEntry: false,
-  })
+    !fs.statSync(`${userPath}/${AES.get(req.cookies.webnote)}`, {
+      throwIfNoEntry: false,
+    })
     ? res.send({ code: 0, msg: "非法操作！" })
     : !navReg.test(req.body.topNav) && !navReg.test(req.body.leftNav)
-    ? res.send({ code: 0, msg: "请检查格式。" })
-    : fs.mkdir(
+      ? res.send({ code: 0, msg: "请检查格式。" })
+      : fs.mkdir(
         req.body.leftNav
-          ? `${userPath}/${AES.get(req.cookies.webnote)}/md/${
-              req.body.topNav
-            }/${req.body.leftNav}`
+          ? `${userPath}/${AES.get(req.cookies.webnote)}/md/${req.body.topNav
+          }/${req.body.leftNav}`
           : `${userPath}/${AES.get(req.cookies.webnote)}/md/${req.body.topNav}`,
         (err) => {
           err
@@ -274,11 +270,9 @@ router.post("/delFolder", function (req, res) {
       !req.body.leftNav && !req.body.items
         ? `${userPath}/${AES.get(req.cookies.webnote)}/md/${req.body.topNav}`
         : req.body.leftNav && !req.body.items
-        ? `${userPath}/${AES.get(req.cookies.webnote)}/md/${req.body.topNav}/${
-            req.body.leftNav
+          ? `${userPath}/${AES.get(req.cookies.webnote)}/md/${req.body.topNav}/${req.body.leftNav
           }`
-        : `${userPath}/${AES.get(req.cookies.webnote)}/md/${req.body.topNav}/${
-            req.body.leftNav
+          : `${userPath}/${AES.get(req.cookies.webnote)}/md/${req.body.topNav}/${req.body.leftNav
           }/${req.body.items}.md`,
       { recursive: true },
       (err) => {
@@ -294,20 +288,15 @@ router.post("/delFolder", function (req, res) {
 
 // 上传md
 router.post("/upMd", function (req, res) {
+  console.log("/upMd");
   let upload = multer({
     storage: multer.diskStorage({
       // 存储引擎
       destination: function (req, file, cb) {
         // 配置文件存储目录
-        let tmpPath = `${userPath}/${AES.get(req.cookies.webnote)}/md/${
-          req.body.topNavType
-        }/${req.body.leftNavType}`;
-        cpType(req, tmpPath) &&
-        AES.get(req.cookies.webnote) &&
-        req.body.topNavType &&
-        req.body.leftNavType
-          ? cb(null, tmpPath)
-          : cb(`${file.originalname}上传失败，参数缺失！`);
+        let tmpPath = `${userPath}/${AES.get(req.cookies.webnote)}/md/${req.body.topNavType
+          }/${req.body.leftNavType}`;
+        cpType(req, tmpPath) ? cb(null, tmpPath) : cb(`${file.originalname}上传失败，参数缺失！`);
       },
       filename: function (req, file, cb) {
         // 配置文件名
@@ -320,8 +309,8 @@ router.post("/upMd", function (req, res) {
       fileNameReg.test(fileInfo.name)
         ? cb(`${file.originalname} 包含特殊字符。`, false)
         : fileInfo.ext === ".md"
-        ? cb(null, true)
-        : cb(`${file.originalname}不是md文件!`, false);
+          ? cb(null, true)
+          : cb(`${file.originalname}不是md文件!`, false);
     },
     limits: {
       fileSize: 1024000 * 0.1,
@@ -344,23 +333,22 @@ router.post("/upMd", function (req, res) {
 // 更新md
 router.post("/upMdData", function (req, res) {
   req.body.topNavType &&
-  req.body.leftNavType &&
-  req.body.ItemType &&
-  AES.get(req.cookies.webnote) &&
-  fs.statSync(`${userPath}/${AES.get(req.cookies.webnote)}`, {
-    throwIfNoEntry: false,
-  })
+    req.body.leftNavType &&
+    req.body.ItemType &&
+    AES.get(req.cookies.webnote) &&
+    fs.statSync(`${userPath}/${AES.get(req.cookies.webnote)}`, {
+      throwIfNoEntry: false,
+    })
     ? fs.writeFile(
-        `${userPath}/${AES.get(req.cookies.webnote)}/md/${
-          req.body.topNavType
-        }/${req.body.leftNavType}/${req.body.ItemType}.md`,
-        req.body.content,
-        (err) => {
-          err
-            ? res.send({ code: 0, msg: "保存失败，请重试。" })
-            : res.send({ code: 1, msg: "保存成功。" });
-        }
-      )
+      `${userPath}/${AES.get(req.cookies.webnote)}/md/${req.body.topNavType
+      }/${req.body.leftNavType}/${req.body.ItemType}.md`,
+      req.body.content,
+      (err) => {
+        err
+          ? res.send({ code: 0, msg: "保存失败，请重试。" })
+          : res.send({ code: 1, msg: "保存成功。" });
+      }
+    )
     : res.send({ code: 0, msg: "欢迎页内容无法保存。" });
 });
 
@@ -368,10 +356,9 @@ router.post("/upMdData", function (req, res) {
 router.post("/addMd", function (req, res) {
   if (!AES.get(req.cookies.webnote)) {
     res.send({ code: 0, msg: `非法操作` });
-  }else{
-    let path = `${userPath}/${AES.get(req.cookies.webnote)}/md/${
-      req.body.topNavType
-    }/${req.body.leftNavType}/${req.body.mdName}.md`;
+  } else {
+    let path = `${userPath}/${AES.get(req.cookies.webnote)}/md/${req.body.topNavType
+      }/${req.body.leftNavType}/${req.body.mdName}.md`;
     fs.access(path, fs.constants.F_OK, (err) => {
       if (err) {
         fs.writeFile(path, "", (err) => {
@@ -394,9 +381,8 @@ router.post("/setMdName", function (req, res) {
   if (!AES.get(req.cookies.webnote)) {
     res.send({ code: 0, msg: `非法操作` });
   }
-  let path = `${userPath}/${AES.get(req.cookies.webnote)}/md/${
-    req.body.topNavType
-  }/${req.body.leftNavType}`;
+  let path = `${userPath}/${AES.get(req.cookies.webnote)}/md/${req.body.topNavType
+    }/${req.body.leftNavType}`;
   fs.access(`${path}/${req.body.mdName}.md`, fs.constants.F_OK, (err) => {
     if (err) {
       res.send({ code: 0, msg: `非法操作` });
@@ -443,8 +429,8 @@ router.post("/upImg", function (req, res) {
       fileNameReg.test(fileInfo.name)
         ? cb(`${file.originalname} 包含特殊字符。`, false)
         : false || imgReg.test(fileInfo.base)
-        ? cb(null, true)
-        : cb(`${file.originalname}不是常用图片格式！`, false);
+          ? cb(null, true)
+          : cb(`${file.originalname}不是常用图片格式！`, false);
     },
     limits: {
       fileSize: 1024000 * 2,
@@ -460,7 +446,7 @@ router.post("/upImg", function (req, res) {
       res.send({
         code: 1,
         msg: `${req.file.originalname} 上传成功。`,
-        imgUrl: `/getimg/${req.file.originalname}`,
+        imgUrl: `https://admin.webnote.fun/getimg/${req.file.originalname}`,
       });
     }
   });
@@ -469,9 +455,8 @@ router.post("/upImg", function (req, res) {
 // 删除md图片
 router.post("/delImg", function (req, res) {
   if (AES.get(req.cookies.webnote) && req.body.imgName) {
-    let path = `${userPath}/${AES.get(req.cookies.webnote)}/img/${
-      req.body.imgName
-    }`;
+    let path = `${userPath}/${AES.get(req.cookies.webnote)}/img/${req.body.imgName
+      }`;
     fs.access(path, fs.constants.F_OK, (err) => {
       if (err) {
         res.send({ code: 0, msg: `${req.body.imgName} 不存在。` });
@@ -479,9 +464,9 @@ router.post("/delImg", function (req, res) {
         fs.rm(path, function (err) {
           err
             ? res.send({
-                code: 0,
-                msg: `${req.body.imgName} 删除失败，请稍后重试。`,
-              })
+              code: 0,
+              msg: `${req.body.imgName} 删除失败，请稍后重试。`,
+            })
             : res.send({ code: 1, msg: `${req.body.imgName} 删除成功。` });
         });
       }
@@ -500,9 +485,7 @@ router.get("/getimg/:imgname", function (req, res) {
         fs.constants.F_OK,
         (err) => {
           if (!err) {
-            fs.createReadStream(`${mdPath}/../img/${req.params.imgname}`).pipe(
-              res
-            );
+            fs.createReadStream(`${mdPath}/../img/${req.params.imgname}`).pipe(res);
           } else {
             fs.createReadStream(`${mdPath}/../img/404.png`).pipe(res);
           }
@@ -512,9 +495,7 @@ router.get("/getimg/:imgname", function (req, res) {
       fs.createReadStream(`${mdPath}/../img/401.png`).pipe(res);
     }
   } else {
-    let imgPath = `${userPath}/${AES.get(req.cookies.webnote)}/img/${
-      req.params.imgname
-    }`;
+    let imgPath = `${userPath}/${AES.get(req.cookies.webnote)}/img/${req.params.imgname}`;
     fs.access(imgPath, fs.constants.F_OK, (err) => {
       if (!err) {
         fs.createReadStream(imgPath).pipe(res);
@@ -555,11 +536,11 @@ router.post("/queryImg", function (req, res) {
 router.post("/getCode", (req, res) => {
   let code = Math.random().toFixed(6).slice(-6);
   setCookie(res, "wn", code, 10);
-  mail.sendCode(req.body.username, code, (err, info) => {
-      err ? res.send({ code: 0, msg: "邮件发送失败！" }) : res.send({ code: 1, msg: "邮件发送成功" });
-  })
+  // mail.sendCode(req.body.username, code, (err, info) => {
+  //   err ? res.send({ code: 0, msg: "邮件发送失败！" }) : res.send({ code: 1, msg: "邮件发送成功" });
+  // })
   console.log("Code: " + code);
-  // res.send({ code: 1, msg: "邮件发送成功" });
+  res.send({ code: 1, msg: "邮件发送成功" });
 });
 
 /** 设置cookie
@@ -571,7 +552,7 @@ router.post("/getCode", (req, res) => {
  */
 function setCookie(res, cookieName, cookinfo, time = 0) {
   res.cookie(cookieName, AES.set(cookinfo), {
-    domain: '.webnote.fun',  //域名
+    // domain: '.webnote.fun',  //域名
     maxAge: 60000 * time, //过期时间，单位毫秒
     httpOnly: true, //只能服务器改变cookie
     // signed: true,           //使用签名模式
@@ -622,16 +603,5 @@ function cpType(req, paths) {
   );
 }
 
-//  router全局配置
-// router.all('*', function (req, res, next) {
-//     // res.header("Access-Control-Allow-Origin", "*"); // 允许所有域名访问
-//     res.header("Access-Control-Allow-Origin", "http://localhost:8080/"); // 只允许特定域名访问
-//     res.header("Access-Control-Allow-Credentials", true)
-//     // res.header("Access-Control-Allow-Headers", "X-Requested-With");
-//     // res.header("Access-Control-Allow-Methods", "PUT,POST,GET,DELETE,OPTIONS");
-//     // res.header("X-Powered-By", ' 3.2.1')
-//     // res.header("Content-Type", "application/json;charset=utf-8");
-//     next();
-// });
 // 导出路由对象
 module.exports = router;
